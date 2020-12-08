@@ -21,21 +21,27 @@ app.get("/", (request, response) => {
 
 app.post("/login", (request, response) => {
   response.cookie('username', request.body.username);
-  console.log('cookie:', request.body.username);
   response.redirect('/urls');
 });
 
 app.get("/urls", (request, response) => {
-  const templateVars = {urls : urlDatabase};
+  const templateVars = {
+    username: request.cookies["username"],
+    urls : urlDatabase};
   response.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (request, response) => {
-  response.render('urls_new');
+  const templateVars = {username: request.cookies["username"]};
+  response.render('urls_new', templateVars);
 });
 
 app.get("/urls/:shortURL", (request, response) => {
-  const templateVars = {shortURL: request.params.shortURL, longURL: urlDatabase[request.params.shortURL]};
+  const templateVars = {
+    shortURL: request.params.shortURL,
+    longURL: urlDatabase[request.params.shortURL],
+    username: request.cookies["username"]
+  };
   response.render("urls_show", templateVars);
 });
 
