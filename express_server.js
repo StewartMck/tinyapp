@@ -31,7 +31,7 @@ app.get("/urls/:shortURL", (request, response) => {
 });
 
 app.post("/urls", (request, response) => {
-  console.log(request.body);
+  urlDatabase[generateRandomString()] = request.body.longURL;
   response.send("ok");
 });
 
@@ -39,7 +39,7 @@ app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-const generateRandomString = function () {
+const generateRandomString = function() {
   //ASCI chars: 97(a) --> 122(z)
   //math.random() * (max - min) + min --> max excld, min incld
   let randomString = '';
