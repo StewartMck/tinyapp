@@ -68,6 +68,11 @@ app.post("/urls", (request, response) => {
   response.redirect(`/urls/${shortURL}`);
 });
 
+app.post("/logout", (request, response) => {
+  response.clearCookie("username");
+  response.redirect(`/urls`);
+});
+
 app.listen(PORT, () => {
   console.log(`Express Server listening on port ${PORT}!`);
 });
