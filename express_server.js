@@ -7,6 +7,7 @@ const PORT = 8080;
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended:true}));
 
+
 const urlDatabase = {
   "b2xVn2" : "http://www.lighthouselabs.ca",
   "9sm5xK" : "http://www.google.com"
@@ -52,10 +53,6 @@ app.post("/urls", (request, response) => {
   urlDatabase[shortURL] = request.body.longURL;
   response.redirect(`/urls/${shortURL}`);
 });
-
-
-
-
 
 app.listen(PORT, () => {
   console.log(`Express Server listening on port ${PORT}!`);
