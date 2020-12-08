@@ -35,10 +35,10 @@ app.get("/u/:shortURL", (request, response) => {
   response.redirect(longURL);
 });
 
-app.post("/urls", (request, response) => {
-  let shortURL = generateRandomString();
-  urlDatabase[shortURL] = request.body.longURL;
-  response.redirect(`/urls/${shortURL}`);
+app.post("/urls/:shortURL", (request, response) => {
+  // need logic here if fail...
+  urlDatabase[request.params.shortURL] = request.body.longURL;
+  response.redirect('/urls');
 });
 
 app.post("/urls/:shortURL/delete", (request, response) => {
@@ -46,6 +46,16 @@ app.post("/urls/:shortURL/delete", (request, response) => {
   delete urlDatabase[request.params.shortURL];
   response.redirect('/urls');
 });
+
+app.post("/urls", (request, response) => {
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = request.body.longURL;
+  response.redirect(`/urls/${shortURL}`);
+});
+
+
+
+
 
 app.listen(PORT, () => {
   console.log(`Express Server listening on port ${PORT}!`);
