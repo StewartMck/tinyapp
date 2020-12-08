@@ -25,7 +25,7 @@
         <% for(let url in urls) { %>
           <tr>
             <form>
-            <td><%= url %></td>
+            <td><a href="/u/<%= url %>" target="_blank"><%= url %></a></td>
             <td><%= urls[url] %></td>
             <td>
               <button id= "<%=url%>_edit" type="submit" formaction= "<%=`/urls/${url}`%>", formmethod="GET" class="btn btn-info">Edit</button>
