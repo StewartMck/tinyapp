@@ -41,8 +41,14 @@ app.post("/urls", (request, response) => {
   response.redirect(`/urls/${shortURL}`);
 });
 
+app.post("/urls/:shortURL/delete", (request, response) => {
+  // need logic here if fail...
+  delete urlDatabase[request.params.shortURL];
+  response.redirect('/urls');
+});
+
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`Express Server listening on port ${PORT}!`);
 });
 
 const generateRandomString = function() {
