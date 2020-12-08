@@ -19,6 +19,7 @@
   "homepage": "https://github.com/StewartMck/tinyapp#readme",
   "dependencies": {
     "ejs": "^3.1.5",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "body-parser": "^1.19.0"
   }
 }
