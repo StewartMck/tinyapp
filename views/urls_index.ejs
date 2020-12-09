@@ -12,7 +12,8 @@
   <header><%- include('./partials/_header');%></header>
   <main style="margin: 1em;">
     <h3>My URLs</h3>
-    <table class="table">
+    <div class="table-responsive-lg">
+    <table class="table table-hover table-fixed">
       <thead>
         <tr>
           <th scope="col">Short URL</th>
@@ -26,7 +27,7 @@
       <tbody>
         <% for(let url in urls) { %>
           <tr>
-            <form>
+            <form >
             <td><a href="/u/<%= url %>" target="_blank"><%= url %></a></td>
             <td><%= urls[url].longURL %></td>
             <td><%= urls[url].dateCreated%></td>
@@ -36,12 +37,13 @@
             </td>
             <td>
               <button id= "<%=url%>_delete" type="submit" formaction= "<%=`/urls/${url}/delete`%>", formmethod="POST" class="btn btn-danger">Delete</button>
-              </form>
             </td>
+          </form>
           </tr>
-        <% } %>
+          <% } %>
       </tbody>
     </table>
+  </div>
   </main>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

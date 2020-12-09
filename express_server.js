@@ -15,6 +15,15 @@ app.use(morgan('dev'));
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW", dateCreated: 0,  numberVisits: 0},
+  getUrlsForUser : (userId) => {
+    const userSpecificURLDatabase = {};
+    for (const shortURL in urlDatabase) {
+      if ((urlDatabase[shortURL]).userID === userId) {
+        userSpecificURLDatabase[shortURL] = urlDatabase[shortURL];
+      }
+    }
+    return userSpecificURLDatabase;
+  }
 };
 
 const users = {
@@ -38,16 +47,16 @@ const users = {
 };
 
 
-const getUrlsForUser = (userId) => {
-  const userSpecificURLDatabase = {};
-  for (const shortURL in urlDatabase) {
-    if ((urlDatabase[shortURL]).userID === userId) {
-      userSpecificURLDatabase[shortURL] = urlDatabase[shortURL];
+// const getUrlsForUser = (userId) => {
+//   const userSpecificURLDatabase = {};
+//   for (const shortURL in urlDatabase) {
+//     if ((urlDatabase[shortURL]).userID === userId) {
+//       userSpecificURLDatabase[shortURL] = urlDatabase[shortURL];
 
-    }
-  }
-  return userSpecificURLDatabase;
-};
+//     }
+//   }
+//   return userSpecificURLDatabase;
+// };
 
 
 app.get("/", (request, response) => {
@@ -77,7 +86,7 @@ app.get("/urls", (request, response) => {
   if (validUser) {
     const templateVars = {
       user: validUser,
-      urls: getUrlsForUser(validUser.id) };
+      urls: urlDatabase.getUrlsForUser(validUser.id) };
     response.render("urls_index", templateVars);
   } else {
     response.render("error_noLogin", {user: undefined});
@@ -119,7 +128,9 @@ app.get("/u/:shortURL", (request, response) => {
     urlDatabase[request.params.shortURL].numberVisits++;
     response.redirect(longURL);
   } else {
+    
     response.render("error_URL", { shortURL: [request.params.shortURL], user: undefined });
+    // response.send(404);
   }
 });
 
