@@ -9,31 +9,42 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-
-        <a>username: <%=username%></a>
-
-        
-        <form class="justify-content-right" action="/login" method="POST">
-          <div class="form-row align-items-center">
-            <div class="col-auto">
-              <label class="sr-only" for="inlineFormInputGroup">Username</label>
-              <div class="input-group mb-2">
-                <div class="input-group-prepend">
-                  <div class="input-group-text">@</div>
-                </div>
-                <input type="text" class="form-control py-0" name="username" placeholder="Username">
+      </div>
+    </div>
+    <div class="navbar-nav nav-right">
+      <% if(!username){ %>
+      <form action="/login" method="POST">
+        <div class="form-row align-items-bottom">
+          <div class="col-auto">
+            <label class="sr-only" for="inlineFormInputGroup">Username</label>
+            <div class="input-group mb-2">
+              <div class="input-group-prepend">
+                <div class="input-group-text">@</div>
               </div>
-            </div>
-            <div class="col-auto">
-              <button type="submit" class="btn btn-primary btn-md mt-0">Login</button>
+              <input type="text" class="form-control py-0" name="username" placeholder="Username">
             </div>
           </div>
-        </form>
-      
-     
-    </div>
-    </div>
-    </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-primary btn-md mt-0">Login</button>
+          </div>
+        </div>
+      </form>
+      <% } else { %>
+        <form action="/logout" method="POST">
+        <div class="form-row align-items-bottom">
+          <div class="col-auto">
+            <div class="input-group mb-2">
+              <div class="input-group-prepend">
+              </div>
+              <label class="h6">Logged in As: <%=username%>!</label>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-md mt-0">Logout</button>
+          <div class="col-auto">
+          </div>
+        </div>
+      </form>
+      <% } %>
     </div>
   </nav>
 </header>
