@@ -70,7 +70,14 @@ app.post("/login", (request, response) => {
 });
 
 app.post("/register", (request, response) => {
-  response.cookie('username', request.body.username);
+  const userID = generateRandomString();
+  users[userID] = {
+    id: userID,
+    email: request.body.email,
+    password: request.body.password
+  };
+  response.cookie('user_id', userID);
+  console.log(users);
   response.redirect('/urls');
 });
 
