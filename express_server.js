@@ -19,9 +19,10 @@ app.get("/", (request, response) => {
   response.send('Hello!');
 });
 
-app.post("/login", (request, response) => {
-  response.cookie('username', request.body.username);
-  response.redirect('/urls');
+app.get("/register", (request, response) => {
+  // response.cookie('username', request.body.username);
+  const templateVars = {username: request.cookies["username"]};
+  response.render('register', templateVars);
 });
 
 app.get("/urls", (request, response) => {
@@ -48,6 +49,11 @@ app.get("/urls/:shortURL", (request, response) => {
 app.get("/u/:shortURL", (request, response) => {
   const longURL = urlDatabase[request.params.shortURL];
   response.redirect(longURL);
+});
+
+app.post("/login", (request, response) => {
+  response.cookie('username', request.body.username);
+  response.redirect('/urls');
 });
 
 app.post("/urls/:shortURL", (request, response) => {
