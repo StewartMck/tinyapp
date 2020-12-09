@@ -32,19 +32,25 @@ const users = {
 };
 
 app.get("/", (request, response) => {
-  response.redirect('/login');
+  if (request.cookies["user_id"]) {
+    response.redirect('/urls');
+  } else {
+    response.redirect('/login');
+  }
 });
 
 app.get("/register", (request, response) => {
-  // const templateVars = {user: users[request.cookies["user_id"]]};
-  response.render('register', {user:undefined});
+  response.render('register', {user: undefined, userExists: false, isEmptyFields: false });
 });
 
 app.get("/login", (request, response) => {
-  // const templateVars = {user: users[request.cookies["user_id"]]};
-  response.render('login', {user:undefined});
+  const validUser = users[request.cookies["user_id"]];
+  if (validUser) {
+    return response.redirect("/urls");
+  } else {
+    response.render('login', { user: undefined, userNotFound: false });
+  }
 });
-
 
 app.get("/urls", (request, response) => {
   const validUser = users[request.cookies["user_id"]];
@@ -54,7 +60,7 @@ app.get("/urls", (request, response) => {
       urls: getUrlsForUser(validUser.id) };
     response.render("urls_index", templateVars);
   } else {
-    response.redirect('/login');
+    response.render("error_noLogin", {user: undefined});
   }
 });
 
@@ -71,17 +77,30 @@ app.get("/urls/new", (request, response) => {
 // After add new URL
 app.get("/urls/:shortURL", (request, response) => {
   const validUser = users[request.cookies["user_id"]];
-  const templateVars = {
-    shortURL: request.params.shortURL,
-    longURL: (urlDatabase[request.params.shortURL]).longURL,
-    user: validUser
-  };
-  response.render("urls_show", templateVars);
+  const shortURL = request.params.shortURL;
+  const isValidShortURL = urlDatabase[shortURL];
+  
+  if (validUser) {
+    const templateVars = {
+      shortURL: shortURL,
+      longURL: (isValidShortURL ? (urlDatabase[request.params.shortURL]).longURL : undefined),
+      user: validUser,
+      ownsURL: (isValidShortURL ? ((urlDatabase[shortURL]).userID === validUser.id) : undefined)
+    };
+    console.log(templateVars);
+    response.render("urls_show", templateVars);
+  } else {
+    response.render("error_noLogin", {user:undefined});
+  }
 });
 
 app.get("/u/:shortURL", (request, response) => {
-  const longURL = urlDatabase[request.params.shortURL].longURL;
-  response.redirect(longURL);
+  if (urlDatabase[request.params.shortURL]) {
+    const longURL = urlDatabase[request.params.shortURL].longURL;
+    response.redirect(longURL);
+  } else {
+    response.render("error_URL", { shortURL: [request.params.shortURL], user: undefined });
+  }
 });
 
 app.post("/login", (request, response) => {
@@ -91,9 +110,10 @@ app.post("/login", (request, response) => {
     
   if (userFound && userFound.password === request.body.password) {
     response.cookie('user_id', userFound.id);
-    response.redirect('/urls');
+    return response.redirect('/urls');
   } else {
-    response.status(403).send("Username or Password is incorrect!");
+    response.status(403);
+    return response.render("login", {user:undefined, userNotFound: true});
   }
 
 });
@@ -101,7 +121,8 @@ app.post("/login", (request, response) => {
 app.post("/register", (request, response) => {
 
   if (Object.values(request.body).some((value) => value === "")) {
-    return response.status(400).send("Email or Password cannot be empty!");
+    response.status(400);
+    return response.render("register", {user: undefined, userExists: false, isEmptyFields: true });
   }
 
   const providedEmail = request.body.email;
@@ -116,7 +137,9 @@ app.post("/register", (request, response) => {
     response.cookie('user_id', userID);
     response.redirect('/urls');
   } else {
-    response.status(400).send("User already registered!");
+    response.status(400);
+    response.render("register", {user: undefined, userExists: true, isEmptyFields: false });
+    //send("User already registered!");
   }
 
 });
