@@ -15,6 +15,19 @@ const urlDatabase = {
   "9sm5xK" : "http://www.google.com"
 };
 
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user1@email",
+    password: "uniquepass1"
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user1@email",
+    password: "uniquepass2"
+  }
+};
+
 app.get("/", (request, response) => {
   response.send('Hello!');
 });
@@ -52,6 +65,11 @@ app.get("/u/:shortURL", (request, response) => {
 });
 
 app.post("/login", (request, response) => {
+  response.cookie('username', request.body.username);
+  response.redirect('/urls');
+});
+
+app.post("/register", (request, response) => {
   response.cookie('username', request.body.username);
   response.redirect('/urls');
 });
