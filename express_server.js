@@ -1,8 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser  = require('cookie-parser');
-const morgan = require('morgan');
 const {generateRandomString} = require('./helpers');
+const bcrypt = require('bcrypt');
+const morgan = require('morgan');
+
 
 const app = express();
 const PORT = 8080;
@@ -45,19 +47,6 @@ const users = {
     return undefined;
   }
 };
-
-
-// const getUrlsForUser = (userId) => {
-//   const userSpecificURLDatabase = {};
-//   for (const shortURL in urlDatabase) {
-//     if ((urlDatabase[shortURL]).userID === userId) {
-//       userSpecificURLDatabase[shortURL] = urlDatabase[shortURL];
-
-//     }
-//   }
-//   return userSpecificURLDatabase;
-// };
-
 
 app.get("/", (request, response) => {
   const validUser = users.checkUser(request.cookies["user_id"]);
@@ -139,7 +128,7 @@ app.post("/login", (request, response) => {
   const providedEmail = request.body.email;
   const userFound = users.checkUser(providedEmail);
     
-  if (userFound && userFound.password === request.body.password) {
+  if (userFound && bcrypt.compareSync(request.body.password, userFound.password)) {
     response.cookie('user_id', userFound.id);
     return response.redirect('/urls');
   } else {
@@ -163,7 +152,7 @@ app.post("/register", (request, response) => {
     users[userID] = {
       id: userID,
       email: providedEmail,
-      password: request.body.password
+      password: bcrypt.hashSync(request.body.password, 3)
     };
     response.cookie('user_id', userID);
     response.redirect('/urls');
