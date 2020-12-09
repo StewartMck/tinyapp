@@ -1,8 +1,8 @@
-const { response } = require('express');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser  = require('cookie-parser');
 const morgan = require('morgan');
+const {generateRandomString} = require('./helpers');
 
 const app = express();
 const PORT = 8080;
@@ -14,25 +14,45 @@ app.use(morgan('dev'));
 
 
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW", dateCreated: 0,  numberVisits: 0},
 };
 
 const users = {
-  "userRandomID": {
-    id: "userRandomID",
+  "aJ48lW": {
+    id: "aJ48lW",
     email: "user1@email",
-    password: "uniquepass1"
+    password: "1234"
   },
-  "user2RandomID": {
-    id: "user2RandomID",
-    email: "user1@email",
-    password: "uniquepass2"
+  checkUser : (userDetail) => {
+    if (users[userDetail]) {
+      return users[userDetail];
+    } else {
+      for (const user in users) {
+        if (Object.values(users[user]).some((value) => value === userDetail)) {
+          return users[user];
+        }
+      }
+    }
+    return undefined;
   }
 };
 
+
+const getUrlsForUser = (userId) => {
+  const userSpecificURLDatabase = {};
+  for (const shortURL in urlDatabase) {
+    if ((urlDatabase[shortURL]).userID === userId) {
+      userSpecificURLDatabase[shortURL] = urlDatabase[shortURL];
+
+    }
+  }
+  return userSpecificURLDatabase;
+};
+
+
 app.get("/", (request, response) => {
-  if (request.cookies["user_id"]) {
+  const validUser = users.checkUser(request.cookies["user_id"]);
+  if (validUser) {
     response.redirect('/urls');
   } else {
     response.redirect('/login');
@@ -44,7 +64,7 @@ app.get("/register", (request, response) => {
 });
 
 app.get("/login", (request, response) => {
-  const validUser = users[request.cookies["user_id"]];
+  const validUser = users.checkUser(request.cookies["user_id"]);
   if (validUser) {
     return response.redirect("/urls");
   } else {
@@ -53,7 +73,7 @@ app.get("/login", (request, response) => {
 });
 
 app.get("/urls", (request, response) => {
-  const validUser = users[request.cookies["user_id"]];
+  const validUser = users.checkUser(request.cookies["user_id"]);
   if (validUser) {
     const templateVars = {
       user: validUser,
@@ -65,7 +85,7 @@ app.get("/urls", (request, response) => {
 });
 
 app.get("/urls/new", (request, response) => {
-  const validUser = users[request.cookies["user_id"]];
+  const validUser = users.checkUser(request.cookies["user_id"]);
   if (validUser) {
     const templateVars = { user: validUser };
     response.render('urls_new', templateVars);
@@ -76,7 +96,7 @@ app.get("/urls/new", (request, response) => {
 
 // After add new URL
 app.get("/urls/:shortURL", (request, response) => {
-  const validUser = users[request.cookies["user_id"]];
+  const validUser = users.checkUser(request.cookies["user_id"]);
   const shortURL = request.params.shortURL;
   const isValidShortURL = urlDatabase[shortURL];
   
@@ -87,7 +107,6 @@ app.get("/urls/:shortURL", (request, response) => {
       user: validUser,
       ownsURL: (isValidShortURL ? ((urlDatabase[shortURL]).userID === validUser.id) : undefined)
     };
-    console.log(templateVars);
     response.render("urls_show", templateVars);
   } else {
     response.render("error_noLogin", {user:undefined});
@@ -97,6 +116,7 @@ app.get("/urls/:shortURL", (request, response) => {
 app.get("/u/:shortURL", (request, response) => {
   if (urlDatabase[request.params.shortURL]) {
     const longURL = urlDatabase[request.params.shortURL].longURL;
+    urlDatabase[request.params.shortURL].numberVisits++;
     response.redirect(longURL);
   } else {
     response.render("error_URL", { shortURL: [request.params.shortURL], user: undefined });
@@ -106,7 +126,7 @@ app.get("/u/:shortURL", (request, response) => {
 app.post("/login", (request, response) => {
 
   const providedEmail = request.body.email;
-  const userFound = checkUser(providedEmail);
+  const userFound = users.checkUser(providedEmail);
     
   if (userFound && userFound.password === request.body.password) {
     response.cookie('user_id', userFound.id);
@@ -127,7 +147,7 @@ app.post("/register", (request, response) => {
 
   const providedEmail = request.body.email;
     
-  if (!checkUser(providedEmail)) {
+  if (!users.checkUser(providedEmail)) {
     const userID = generateRandomString();
     users[userID] = {
       id: userID,
@@ -139,35 +159,81 @@ app.post("/register", (request, response) => {
   } else {
     response.status(400);
     response.render("register", {user: undefined, userExists: true, isEmptyFields: false });
-    //send("User already registered!");
   }
 
 });
 
 // For Editing URLS
 app.post("/urls/:shortURL", (request, response) => {
-  // need logic here if fail...
-  urlDatabase[request.params.shortURL] = {
-    longURL : request.body.longURL,
-    userID: request.cookies["user_id"]
-  };
-  response.redirect('/urls');
+  
+  const validUser = users.checkUser(request.cookies["user_id"]);
+  const shortURL = request.params.shortURL;
+  const isValidShortURL = urlDatabase[shortURL];
+  const ownsURL = (isValidShortURL ? ((urlDatabase[shortURL]).userID === validUser.id) : undefined);
+
+  if (validUser && ownsURL) {
+    urlDatabase[shortURL] = {
+      longURL : request.body.longURL,
+      userID: validUser.id
+    };
+    return response.redirect('/urls');
+
+  } else {
+    
+    const templateVars = {
+      shortURL: shortURL,
+      longURL: (isValidShortURL ? (urlDatabase[request.params.shortURL]).longURL : undefined),
+      user: validUser,
+      ownsURL
+    };
+    response.render("urls_show", templateVars);
+  }
 });
 
 app.post("/urls/:shortURL/delete", (request, response) => {
-  // need logic here if fail...
-  delete urlDatabase[request.params.shortURL];
-  response.redirect('/urls');
+
+  const validUser = users.checkUser(request.cookies["user_id"]);
+  const shortURL = request.params.shortURL;
+  const isValidShortURL = urlDatabase[shortURL];
+  const ownsURL = (isValidShortURL ? ((urlDatabase[shortURL]).userID === validUser.id) : undefined);
+
+  if (validUser && ownsURL) {
+    delete urlDatabase[request.params.shortURL];
+    return response.redirect('/urls');
+  } else {
+
+    const templateVars = {
+      shortURL: shortURL,
+      longURL: (isValidShortURL ? (urlDatabase[request.params.shortURL]).longURL : undefined),
+      user: validUser,
+      ownsURL
+    };
+    response.render("urls_show", templateVars);
+  }
+ 
 });
 
 // for new URLS
 app.post("/urls", (request, response) => {
-  let shortURL = generateRandomString();
-  urlDatabase[shortURL] = {
-    longURL: request.body.longURL,
-    userID: request.cookies["user_id"]
-  };
-  response.redirect(`/urls/${shortURL}`);
+  const validUser = users.checkUser(request.cookies["user_id"]);
+  if (validUser) {
+    let shortURL = generateRandomString();
+    urlDatabase[shortURL] = {
+      longURL: request.body.longURL,
+      userID: validUser.id,
+      dateCreated : new Date().toLocaleDateString("en-US"),
+      numberVisits: 0
+    };
+    response.redirect(`/urls/${shortURL}`);
+  } else {
+    const templateVars = {
+      shortURL: undefined,
+      longURL: undefined,
+      user: validUser,
+      ownsURL: false
+    };
+    response.render("urls_show", templateVars);
+  }
 });
 
 app.post("/logout", (request, response) => {
@@ -178,36 +244,3 @@ app.post("/logout", (request, response) => {
 app.listen(PORT, () => {
   console.log(`Express Server listening on port ${PORT}!`);
 });
-
-const generateRandomString = function() {
-  //ASCI chars: 97(a) --> 122(z)
-  //math.random() * (max - min) + min --> max excld, min incld
-  let randomString = '';
-  while (randomString.length < 6) {
-    randomString += String.fromCharCode(Math.floor(Math.random() * (123 - 97) + 97));
-  }
-  return randomString;
-};
-
-const checkUser = (userDetail) => {
-  if (users[userDetail]) {
-    return users[userDetail];
-  } else {
-    for (const user in users) {
-      if (Object.values(users[user]).some((value) => value === userDetail)) {
-        return users[user];
-      }
-    }
-  }
-  return undefined;
-};
-
-const getUrlsForUser = (userId) => {
-  const userSpecificURLDatabase = {};
-  for (const shortURL in urlDatabase) {
-    if ((urlDatabase[shortURL]).userID === userId) {
-      userSpecificURLDatabase[shortURL] = (urlDatabase[shortURL]).longURL;
-    }
-  }
-  return userSpecificURLDatabase;
-};
