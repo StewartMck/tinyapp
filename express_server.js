@@ -1,6 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const cookieParser  = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const {generateRandomString} = require('./helpers');
 const bcrypt = require('bcrypt');
 const morgan = require('morgan');
@@ -10,8 +10,13 @@ const app = express();
 const PORT = 8080;
 
 app.set('view engine', 'ejs');
+
 app.use(bodyParser.urlencoded({extended:true}));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['key1', 'key2']
+}));
+
 app.use(morgan('dev'));
 
 
@@ -49,7 +54,7 @@ const users = {
 };
 
 app.get("/", (request, response) => {
-  const validUser = users.checkUser(request.cookies["user_id"]);
+  const validUser = users.checkUser(request.session.user_id);
   if (validUser) {
     response.redirect('/urls');
   } else {
@@ -62,7 +67,7 @@ app.get("/register", (request, response) => {
 });
 
 app.get("/login", (request, response) => {
-  const validUser = users.checkUser(request.cookies["user_id"]);
+  const validUser = users.checkUser(request.session.user_id);
   if (validUser) {
     return response.redirect("/urls");
   } else {
@@ -71,7 +76,7 @@ app.get("/login", (request, response) => {
 });
 
 app.get("/urls", (request, response) => {
-  const validUser = users.checkUser(request.cookies["user_id"]);
+  const validUser = users.checkUser(request.session.user_id);
   if (validUser) {
     const templateVars = {
       user: validUser,
@@ -83,7 +88,7 @@ app.get("/urls", (request, response) => {
 });
 
 app.get("/urls/new", (request, response) => {
-  const validUser = users.checkUser(request.cookies["user_id"]);
+  const validUser = users.checkUser(request.session.user_id);
   if (validUser) {
     const templateVars = { user: validUser };
     response.render('urls_new', templateVars);
@@ -94,7 +99,7 @@ app.get("/urls/new", (request, response) => {
 
 // After add new URL
 app.get("/urls/:shortURL", (request, response) => {
-  const validUser = users.checkUser(request.cookies["user_id"]);
+  const validUser = users.checkUser(request.session.user_id);
   const shortURL = request.params.shortURL;
   const isValidShortURL = urlDatabase[shortURL];
   
@@ -129,7 +134,7 @@ app.post("/login", (request, response) => {
   const userFound = users.checkUser(providedEmail);
     
   if (userFound && bcrypt.compareSync(request.body.password, userFound.password)) {
-    response.cookie('user_id', userFound.id);
+    request.session.user_id = userFound.id;
     return response.redirect('/urls');
   } else {
     response.status(403);
@@ -154,7 +159,7 @@ app.post("/register", (request, response) => {
       email: providedEmail,
       password: bcrypt.hashSync(request.body.password, 3)
     };
-    response.cookie('user_id', userID);
+    request.session.user_id = userID;
     response.redirect('/urls');
   } else {
     response.status(400);
@@ -166,7 +171,7 @@ app.post("/register", (request, response) => {
 // For Editing URLS
 app.post("/urls/:shortURL", (request, response) => {
   
-  const validUser = users.checkUser(request.cookies["user_id"]);
+  const validUser = users.checkUser(request.session.user_id);
   const shortURL = request.params.shortURL;
   const isValidShortURL = urlDatabase[shortURL];
   const ownsURL = (isValidShortURL ? ((urlDatabase[shortURL]).userID === validUser.id) : undefined);
@@ -192,7 +197,7 @@ app.post("/urls/:shortURL", (request, response) => {
 
 app.post("/urls/:shortURL/delete", (request, response) => {
 
-  const validUser = users.checkUser(request.cookies["user_id"]);
+  const validUser = users.checkUser(request.session.user_id);
   const shortURL = request.params.shortURL;
   const isValidShortURL = urlDatabase[shortURL];
   const ownsURL = (isValidShortURL ? ((urlDatabase[shortURL]).userID === validUser.id) : undefined);
@@ -215,7 +220,7 @@ app.post("/urls/:shortURL/delete", (request, response) => {
 
 // for new URLS
 app.post("/urls", (request, response) => {
-  const validUser = users.checkUser(request.cookies["user_id"]);
+  const validUser = users.checkUser(request.session.user_id);
   if (validUser) {
     let shortURL = generateRandomString();
     urlDatabase[shortURL] = {
@@ -237,7 +242,7 @@ app.post("/urls", (request, response) => {
 });
 
 app.post("/logout", (request, response) => {
-  response.clearCookie("user_id");
+  request.session = null;
   response.redirect(`/urls`);
 });
 
