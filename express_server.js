@@ -70,8 +70,17 @@ app.get("/u/:shortURL", (request, response) => {
 });
 
 app.post("/login", (request, response) => {
-  response.cookie('username', request.body.username);
-  response.redirect('/urls');
+
+  const providedEmail = request.body.email;
+  const userFound = checkUser(providedEmail);
+    
+  if (userFound && userFound.password === request.body.password) {
+    response.cookie('user_id', userFound.id);
+    response.redirect('/urls');
+  } else {
+    response.status(403).send("Username or Password is incorrect!");
+  }
+
 });
 
 app.post("/register", (request, response) => {
