@@ -29,7 +29,7 @@ const users = {
 };
 
 app.get("/", (request, response) => {
-  response.send('Hello!');
+  response.redirect('/urls');
 });
 
 app.get("/register", (request, response) => {
@@ -70,15 +70,27 @@ app.post("/login", (request, response) => {
 });
 
 app.post("/register", (request, response) => {
-  const userID = generateRandomString();
-  users[userID] = {
-    id: userID,
-    email: request.body.email,
-    password: request.body.password
-  };
-  response.cookie('user_id', userID);
-  console.log(users);
-  response.redirect('/urls');
+
+  if (Object.values(request.body).some((value) => value === "")) {
+    return response.status(400).send("Email or Password cannot be empty!");
+  }
+
+  const providedEmail = request.body.email;
+    
+  if (!checkUser(providedEmail)) {
+    const userID = generateRandomString();
+    users[userID] = {
+      id: userID,
+      email: providedEmail,
+      password: request.body.password
+    };
+    response.cookie('user_id', userID);
+    console.log(users);
+    response.redirect('/urls');
+  } else {
+    response.status(400).send("User already registered!");
+  }
+
 });
 
 app.post("/urls/:shortURL", (request, response) => {
@@ -116,4 +128,17 @@ const generateRandomString = function() {
     randomString += String.fromCharCode(Math.floor(Math.random() * (123 - 97) + 97));
   }
   return randomString;
+};
+
+const checkUser = (userDetail) => {
+  if (users[userDetail]) {
+    return users[userDetail];
+  } else {
+    for (const user in users) {
+      if (Object.values(users[user]).some((value) => value === userDetail)) {
+        return users[user];
+      }
+    }
+  }
+  return undefined;
 };
