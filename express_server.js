@@ -36,13 +36,13 @@ app.get("/", (request, response) => {
 });
 
 app.get("/register", (request, response) => {
-  const templateVars = {user: users[request.cookies["user_id"]]};
-  response.render('register', templateVars);
+  // const templateVars = {user: users[request.cookies["user_id"]]};
+  response.render('register', {user:undefined});
 });
 
 app.get("/login", (request, response) => {
-  const templateVars = {user: users[request.cookies["user_id"]]};
-  response.render('login', templateVars);
+  // const templateVars = {user: users[request.cookies["user_id"]]};
+  response.render('login', {user:undefined});
 });
 
 
@@ -54,8 +54,13 @@ app.get("/urls", (request, response) => {
 });
 
 app.get("/urls/new", (request, response) => {
-  const templateVars = {user: users[request.cookies["user_id"]]};
-  response.render('urls_new', templateVars);
+  const validUser = users[request.cookies["user_id"]];
+  if (validUser) {
+    const templateVars = { user: validUser };
+    response.render('urls_new', templateVars);
+  } else {
+    response.redirect('/login');
+  }
 });
 
 app.get("/urls/:shortURL", (request, response) => {
