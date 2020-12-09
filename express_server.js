@@ -33,10 +33,15 @@ app.get("/", (request, response) => {
 });
 
 app.get("/register", (request, response) => {
-  // response.cookie('username', request.body.username);
   const templateVars = {user: users[request.cookies["user_id"]]};
   response.render('register', templateVars);
 });
+
+app.get("/login", (request, response) => {
+  const templateVars = {user: users[request.cookies["user_id"]]};
+  response.render('login', templateVars);
+});
+
 
 app.get("/urls", (request, response) => {
   const templateVars = {
@@ -85,7 +90,6 @@ app.post("/register", (request, response) => {
       password: request.body.password
     };
     response.cookie('user_id', userID);
-    console.log(users);
     response.redirect('/urls');
   } else {
     response.status(400).send("User already registered!");

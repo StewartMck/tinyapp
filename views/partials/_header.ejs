@@ -11,21 +11,15 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <!-- <div class="navbar-nav nav-right">
+    <div class="navbar-nav nav-right">
       <% if(!user){ %>
-      <form action="/login" method="POST">
+      <form>
         <div class="form-row align-items-bottom">
           <div class="col-auto">
-            <label class="sr-only" for="inlineFormInputGroup">Username</label>
-            <div class="input-group mb-2">
-              <div class="input-group-prepend">
-                <div class="input-group-text">@</div>
-              </div>
-              <input type="text" class="form-control py-0" name="username" placeholder="Username">
-            </div>
+            <button type="submit" class="btn btn-primary btn-md mt-0" formaction="/login" formmethod="GET">Login</button>
           </div>
           <div class="col-auto">
-            <button type="submit" class="btn btn-primary btn-md mt-0">Login</button>
+            <button type="submit" class="btn btn-primary btn-md mt-0" formaction="/register" formmethod="GET">Register</button>
           </div>
         </div>
       </form>
@@ -45,6 +39,6 @@
         </div>
       </form>
       <% } %>
-    </div> -->
+    </div>
   </nav>
 </header>
