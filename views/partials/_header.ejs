@@ -12,7 +12,7 @@
       </div>
     </div>
     <div class="navbar-nav nav-right">
-      <% if(!username){ %>
+      <% if(!user){ %>
       <form action="/login" method="POST">
         <div class="form-row align-items-bottom">
           <div class="col-auto">
@@ -36,7 +36,7 @@
             <div class="input-group mb-2">
               <div class="input-group-prepend">
               </div>
-              <label class="h6">Logged in As: <%=username%>!</label>
+              <label class="h6">Logged in As: <%=user.email%>!</label>
             </div>
           </div>
           <button type="submit" class="btn btn-primary btn-md mt-0">Logout</button>
