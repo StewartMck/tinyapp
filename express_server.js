@@ -2,12 +2,15 @@ const { response } = require('express');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cookieParser  = require('cookie-parser');
+const morgan = require('morgan');
+
 const app = express();
 const PORT = 8080;
 
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(cookieParser());
+app.use(morgan('dev'));
 
 
 const urlDatabase = {
@@ -29,7 +32,7 @@ const users = {
 };
 
 app.get("/", (request, response) => {
-  response.redirect('/urls');
+  response.redirect('/login');
 });
 
 app.get("/register", (request, response) => {
