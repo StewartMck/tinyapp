@@ -14,8 +14,8 @@ app.use(morgan('dev'));
 
 
 const urlDatabase = {
-  "b2xVn2" : "http://www.lighthouselabs.ca",
-  "9sm5xK" : "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const users = {
@@ -47,10 +47,15 @@ app.get("/login", (request, response) => {
 
 
 app.get("/urls", (request, response) => {
-  const templateVars = {
-    user: users[request.cookies["user_id"]],
-    urls : urlDatabase};
-  response.render("urls_index", templateVars);
+  const validUser = users[request.cookies["user_id"]];
+  if (validUser) {
+    const templateVars = {
+      user: validUser,
+      urls: getUrlsForUser(validUser.id) };
+    response.render("urls_index", templateVars);
+  } else {
+    response.redirect('/login');
+  }
 });
 
 app.get("/urls/new", (request, response) => {
@@ -63,17 +68,19 @@ app.get("/urls/new", (request, response) => {
   }
 });
 
+// After add new URL
 app.get("/urls/:shortURL", (request, response) => {
+  const validUser = users[request.cookies["user_id"]];
   const templateVars = {
     shortURL: request.params.shortURL,
-    longURL: urlDatabase[request.params.shortURL],
-    user: users[request.cookies["user_id"]]
+    longURL: (urlDatabase[request.params.shortURL]).longURL,
+    user: validUser
   };
   response.render("urls_show", templateVars);
 });
 
 app.get("/u/:shortURL", (request, response) => {
-  const longURL = urlDatabase[request.params.shortURL];
+  const longURL = urlDatabase[request.params.shortURL].longURL;
   response.redirect(longURL);
 });
 
@@ -114,9 +121,13 @@ app.post("/register", (request, response) => {
 
 });
 
+// For Editing URLS
 app.post("/urls/:shortURL", (request, response) => {
   // need logic here if fail...
-  urlDatabase[request.params.shortURL] = request.body.longURL;
+  urlDatabase[request.params.shortURL] = {
+    longURL : request.body.longURL,
+    userID: request.cookies["user_id"]
+  };
   response.redirect('/urls');
 });
 
@@ -126,9 +137,13 @@ app.post("/urls/:shortURL/delete", (request, response) => {
   response.redirect('/urls');
 });
 
+// for new URLS
 app.post("/urls", (request, response) => {
   let shortURL = generateRandomString();
-  urlDatabase[shortURL] = request.body.longURL;
+  urlDatabase[shortURL] = {
+    longURL: request.body.longURL,
+    userID: request.cookies["user_id"]
+  };
   response.redirect(`/urls/${shortURL}`);
 });
 
@@ -162,4 +177,14 @@ const checkUser = (userDetail) => {
     }
   }
   return undefined;
+};
+
+const getUrlsForUser = (userId) => {
+  const userSpecificURLDatabase = {};
+  for (const shortURL in urlDatabase) {
+    if ((urlDatabase[shortURL]).userID === userId) {
+      userSpecificURLDatabase[shortURL] = (urlDatabase[shortURL]).longURL;
+    }
+  }
+  return userSpecificURLDatabase;
 };
