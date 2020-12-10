@@ -1,0 +1,44 @@
+<header>
+  <nav class="navbar navbar-expand-md navbar-dark bg-success">
+    <a class="navbar-brand" href="/urls">TinyApp</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+      aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav">
+        <a class="nav-item nav-link" href="/urls">My URLs</a>
+        <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
+      </div>
+    </div>
+    <div class="navbar-nav nav-right">
+      <% if(!user){ %>
+      <form>
+        <div class="form-row align-items-bottom">
+          <div class="col-auto">
+            <button type="submit" class="btn btn-primary btn-md mt-0" formaction="/login" formmethod="GET">Login</button>
+          </div>
+          <div class="col-auto">
+            <button type="submit" class="btn btn-primary btn-md mt-0" formaction="/register" formmethod="GET">Register</button>
+          </div>
+        </div>
+      </form>
+      <% } else { %>
+        <form action="/logout" method="POST">
+        <div class="form-row align-items-bottom">
+          <div class="col-auto">
+            <div class="input-group mb-2">
+              <div class="input-group-prepend">
+              </div>
+              <label class="h6">Logged in as: <b><%=user.email%></b></label>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-md mt-0">Logout</button>
+          <div class="col-auto">
+          </div>
+        </div>
+      </form>
+      <% } %>
+    </div>
+  </nav>
+</header>

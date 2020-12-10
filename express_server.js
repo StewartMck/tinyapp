@@ -3,8 +3,9 @@ const bodyParser = require('body-parser');
 const cookieSession = require('cookie-session');
 const {generateRandomString} = require('./helpers');
 const bcrypt = require('bcrypt');
-const morgan = require('morgan');
+const data = require('./data');
 
+const morgan = require('morgan');
 
 const app = express();
 const PORT = 8080;
@@ -20,41 +21,8 @@ app.use(cookieSession({
 app.use(morgan('dev'));
 
 
-const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW", dateCreated: 0,  numberVisits: 0},
-  getUrlsForUser : (userId) => {
-    const userSpecificURLDatabase = {};
-    for (const shortURL in urlDatabase) {
-      if ((urlDatabase[shortURL]).userID === userId) {
-        userSpecificURLDatabase[shortURL] = urlDatabase[shortURL];
-      }
-    }
-    return userSpecificURLDatabase;
-  }
-};
-
-const users = {
-  "aJ48lW": {
-    id: "aJ48lW",
-    email: "user1@email",
-    password: "1234"
-  },
-  checkUser : (userDetail) => {
-    if (users[userDetail]) {
-      return users[userDetail];
-    } else {
-      for (const user in users) {
-        if (Object.values(users[user]).some((value) => value === userDetail)) {
-          return users[user];
-        }
-      }
-    }
-    return undefined;
-  }
-};
-
 app.get("/", (request, response) => {
-  const validUser = users.checkUser(request.session.user_id);
+  const validUser = data.users.checkUser(request.session.user_id);
   if (validUser) {
     response.redirect('/urls');
   } else {
@@ -67,7 +35,7 @@ app.get("/register", (request, response) => {
 });
 
 app.get("/login", (request, response) => {
-  const validUser = users.checkUser(request.session.user_id);
+  const validUser = data.users.checkUser(request.session.user_id);
   if (validUser) {
     return response.redirect("/urls");
   } else {
@@ -76,11 +44,11 @@ app.get("/login", (request, response) => {
 });
 
 app.get("/urls", (request, response) => {
-  const validUser = users.checkUser(request.session.user_id);
+  const validUser = data.users.checkUser(request.session.user_id);
   if (validUser) {
     const templateVars = {
       user: validUser,
-      urls: urlDatabase.getUrlsForUser(validUser.id) };
+      urls: data.urlDatabase.getUrlsForUser(validUser.id) };
     response.render("urls_index", templateVars);
   } else {
     response.render("error_noLogin", {user: undefined});
@@ -88,7 +56,7 @@ app.get("/urls", (request, response) => {
 });
 
 app.get("/urls/new", (request, response) => {
-  const validUser = users.checkUser(request.session.user_id);
+  const validUser = data.users.checkUser(request.session.user_id);
   if (validUser) {
     const templateVars = { user: validUser };
     response.render('urls_new', templateVars);
@@ -97,18 +65,18 @@ app.get("/urls/new", (request, response) => {
   }
 });
 
-// After add new URL
+// Edit URL view
 app.get("/urls/:shortURL", (request, response) => {
-  const validUser = users.checkUser(request.session.user_id);
+  const validUser = data.users.checkUser(request.session.user_id);
   const shortURL = request.params.shortURL;
-  const isValidShortURL = urlDatabase[shortURL];
+  const isValidShortURL = data.urlDatabase[shortURL];
   
   if (validUser) {
     const templateVars = {
       shortURL: shortURL,
-      longURL: (isValidShortURL ? (urlDatabase[request.params.shortURL]).longURL : undefined),
+      longURL: (isValidShortURL ? (data.urlDatabase[request.params.shortURL]).longURL : undefined),
       user: validUser,
-      ownsURL: (isValidShortURL ? ((urlDatabase[shortURL]).userID === validUser.id) : undefined)
+      ownsURL: (isValidShortURL ? ((data.urlDatabase[shortURL]).userID === validUser.id) : undefined)
     };
     response.render("urls_show", templateVars);
   } else {
@@ -117,9 +85,9 @@ app.get("/urls/:shortURL", (request, response) => {
 });
 
 app.get("/u/:shortURL", (request, response) => {
-  if (urlDatabase[request.params.shortURL]) {
-    const longURL = urlDatabase[request.params.shortURL].longURL;
-    urlDatabase[request.params.shortURL].numberVisits++;
+  if (data.urlDatabase[request.params.shortURL]) {
+    const longURL = data.urlDatabase[request.params.shortURL].longURL;
+    data.urlDatabase[request.params.shortURL].numberVisits++;
     response.redirect(longURL);
   } else {
     
@@ -129,9 +97,8 @@ app.get("/u/:shortURL", (request, response) => {
 });
 
 app.post("/login", (request, response) => {
-
   const providedEmail = request.body.email;
-  const userFound = users.checkUser(providedEmail);
+  const userFound = data.users.checkUser(providedEmail);
     
   if (userFound && bcrypt.compareSync(request.body.password, userFound.password)) {
     request.session.user_id = userFound.id;
@@ -152,9 +119,9 @@ app.post("/register", (request, response) => {
 
   const providedEmail = request.body.email;
     
-  if (!users.checkUser(providedEmail)) {
+  if (!data.users.checkUser(providedEmail)) {
     const userID = generateRandomString();
-    users[userID] = {
+    data.users[userID] = {
       id: userID,
       email: providedEmail,
       password: bcrypt.hashSync(request.body.password, 3)
@@ -168,26 +135,20 @@ app.post("/register", (request, response) => {
 
 });
 
-// For Editing URLS
+// POST for Editing URLS
 app.post("/urls/:shortURL", (request, response) => {
-  
-  const validUser = users.checkUser(request.session.user_id);
+  const validUser = data.users.checkUser(request.session.user_id);
   const shortURL = request.params.shortURL;
-  const isValidShortURL = urlDatabase[shortURL];
-  const ownsURL = (isValidShortURL ? ((urlDatabase[shortURL]).userID === validUser.id) : undefined);
+  const isValidShortURL = data.urlDatabase[shortURL];
+  const ownsURL = (isValidShortURL ? ((data.urlDatabase[shortURL]).userID === validUser.id) : undefined);
 
   if (validUser && ownsURL) {
-    urlDatabase[shortURL] = {
-      longURL : request.body.longURL,
-      userID: validUser.id
-    };
+    data.urlDatabase.updateURL(validUser.id, shortURL, request.body.longURL);
     return response.redirect('/urls');
-
   } else {
-    
     const templateVars = {
       shortURL: shortURL,
-      longURL: (isValidShortURL ? (urlDatabase[request.params.shortURL]).longURL : undefined),
+      longURL: (isValidShortURL ? (data.urlDatabase[request.params.shortURL]).longURL : undefined),
       user: validUser,
       ownsURL
     };
@@ -196,40 +157,34 @@ app.post("/urls/:shortURL", (request, response) => {
 });
 
 app.post("/urls/:shortURL/delete", (request, response) => {
-
-  const validUser = users.checkUser(request.session.user_id);
+  const validUser = data.users.checkUser(request.session.user_id);
   const shortURL = request.params.shortURL;
-  const isValidShortURL = urlDatabase[shortURL];
-  const ownsURL = (isValidShortURL ? ((urlDatabase[shortURL]).userID === validUser.id) : undefined);
+  const isValidShortURL = data.urlDatabase[shortURL];
+  const ownsURL = (isValidShortURL ? ((data.urlDatabase[shortURL]).userID === validUser.id) : undefined);
 
   if (validUser && ownsURL) {
-    delete urlDatabase[request.params.shortURL];
+    delete data.urlDatabase[shortURL];
     return response.redirect('/urls');
   } else {
-
     const templateVars = {
       shortURL: shortURL,
-      longURL: (isValidShortURL ? (urlDatabase[request.params.shortURL]).longURL : undefined),
+      longURL: (isValidShortURL ? (data.urlDatabase[request.params.shortURL]).longURL : undefined),
       user: validUser,
       ownsURL
     };
+    response.status(404);
     response.render("urls_show", templateVars);
   }
  
 });
 
-// for new URLS
+// POST for new URLS
 app.post("/urls", (request, response) => {
-  const validUser = users.checkUser(request.session.user_id);
+  const validUser = data.users.checkUser(request.session.user_id);
+
   if (validUser) {
-    let shortURL = generateRandomString();
-    urlDatabase[shortURL] = {
-      longURL: request.body.longURL,
-      userID: validUser.id,
-      dateCreated : new Date().toLocaleDateString("en-US"),
-      numberVisits: 0
-    };
-    response.redirect(`/urls/${shortURL}`);
+    data.urlDatabase.createURL(validUser.id, request.body.longURL);
+    response.redirect('/urls/');
   } else {
     const templateVars = {
       shortURL: undefined,
