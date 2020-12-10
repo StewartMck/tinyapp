@@ -29,7 +29,7 @@
               <button id= "<%=url%>_edit" type="submit" formaction= "<%=`/urls/${url}`%>", formmethod="GET" class="btn btn-info">Edit</button>
             </td>
             <td>
-              <button id= "<%=url%>_delete" type="submit" formaction= "<%=`/urls/${url}/delete`%>", formmethod="POST" class="btn btn-danger">Delete</button>
+              <button id= "<%=url%>_delete" type="submit" formaction= "<%=`/urls/${url}?_method=DELETE`%>", formmethod="POST" class="btn btn-danger">Delete</button>
             </td>
           </form>
           </tr>

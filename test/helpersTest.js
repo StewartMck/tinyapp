@@ -13,11 +13,13 @@ describe('generateRandomString', function() {
 describe('checkUsers', function() {
   it('should return a user object when id matches', function() {
     assert.isObject(users.checkUser("rzltr"), users["rzltr"]);
-   
+  });
+
+  it('should return a user object when matched against details inside the user object', function() {
+    assert.isObject(users.checkUser("1234"), users["rzltr"]);
   });
 
   it('should return undefined when id does not matches', function() {
-    const userID = "rzltree";
     assert.isUndefined(users.checkUser(""));
   });
 

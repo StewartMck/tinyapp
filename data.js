@@ -1,9 +1,10 @@
-const {generateRandomString} = require('./helpers');
+const { generateRandomString } = require('./helpers');
 
 const users = {
-  "rzltr": {id: "rzltr", email: 'user@email', password: '1234' },
-  
-  checkUser : function(userDetail) {
+  "rzltr": { id: "rzltr", email: 'YknpvjBLI6@email.com', password: '1234' },
+
+  // matches against a users key and can also match against the contents of a user object.
+  checkUser: function(userDetail) {
     if (this[userDetail]) {
       return this[userDetail];
     } else {
@@ -29,7 +30,7 @@ const urlDatabase = {
     }
     return userSpecificURLDatabase;
   },
-  createURL: function(userID, longURL) {
+  createURL: function (userID, longURL) {
     this[generateRandomString()] = {
       longURL: longURL,
       userID: userID,
@@ -48,4 +49,4 @@ const urlDatabase = {
   }
 };
 
-module.exports = {users, urlDatabase};
+module.exports = { users, urlDatabase };
