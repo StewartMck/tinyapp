@@ -31,7 +31,12 @@ app.get("/", (request, response) => {
 });
 
 app.get("/register", (request, response) => {
-  response.render('register', {user: undefined, userExists: false, isEmptyFields: false });
+  const validUser = data.users.checkUser(request.session.user_id);
+  if (validUser) {
+    response.redirect('/urls');
+  } else {
+    response.render('register', {user: undefined, userExists: false, isEmptyFields: false });
+  }
 });
 
 app.get("/login", (request, response) => {
@@ -51,6 +56,7 @@ app.get("/urls", (request, response) => {
       urls: data.urlDatabase.getUrlsForUser(validUser.id) };
     response.render("urls_index", templateVars);
   } else {
+    response.status(401);
     response.render("error_noLogin", {user: undefined});
   }
 });
@@ -61,7 +67,7 @@ app.get("/urls/new", (request, response) => {
     const templateVars = { user: validUser };
     response.render('urls_new', templateVars);
   } else {
-    response.redirect('/login');
+    response.render("error_noLogin", {user: undefined});
   }
 });
 
@@ -80,6 +86,7 @@ app.get("/urls/:shortURL", (request, response) => {
     };
     response.render("urls_show", templateVars);
   } else {
+    response.status(404);
     response.render("error_noLogin", {user:undefined});
   }
 });
@@ -90,9 +97,9 @@ app.get("/u/:shortURL", (request, response) => {
     data.urlDatabase[request.params.shortURL].numberVisits++;
     response.redirect(longURL);
   } else {
-    
+    response.status(404);
     response.render("error_URL", { shortURL: [request.params.shortURL], user: undefined });
-    // response.send(404);
+
   }
 });
 
@@ -129,7 +136,7 @@ app.post("/register", (request, response) => {
     request.session.user_id = userID;
     response.redirect('/urls');
   } else {
-    response.status(400);
+    response.status(409);
     response.render("register", {user: undefined, userExists: true, isEmptyFields: false });
   }
 
@@ -152,6 +159,7 @@ app.post("/urls/:shortURL", (request, response) => {
       user: validUser,
       ownsURL
     };
+    response.status(404);
     response.render("urls_show", templateVars);
   }
 });
@@ -198,7 +206,7 @@ app.post("/urls", (request, response) => {
 
 app.post("/logout", (request, response) => {
   request.session = null;
-  response.redirect(`/urls`);
+  response.redirect(`/`);
 });
 
 app.listen(PORT, () => {
