@@ -1,7 +1,7 @@
 const {generateRandomString} = require('./helpers');
 
 const users = {
-  "id": {id: null, email: null, password: null },
+  "rzltr": {id: "rzltr", email: 'user@email', password: '1234' },
   
   checkUser : function(userDetail) {
     if (this[userDetail]) {

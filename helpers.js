@@ -1,4 +1,5 @@
 const generateRandomString = function() {
+  //Only generates letters, no numbers or special chars
   //ASCI chars: 97(a) --> 122(z)
   //math.random() * (max - min) + min --> max excld, min incld
   let randomString = '';
